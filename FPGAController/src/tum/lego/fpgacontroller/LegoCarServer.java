@@ -11,43 +11,31 @@ import java.net.*;
 public class LegoCarServer extends Activity {
 	//public static String wifi_mod_ip = "1.2.3.4";
 	//public static int socket = 3003;
-	ServerSocket providerSocket;
-	Socket connection = null;
-	ObjectOutputStream out;
-	ObjectInputStream in;
-	String message;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_lego_car_controller);
-		
-		Thread t = new Thread(new Server());
-		t.run();
+		new connectTask().execute("");
 	}
 	
-	void sendMessage(String msg)
-	{
-		try{
-			out.writeObject(msg);
-			out.flush();
-			System.out.println("server>" + msg);
+	class connectTask extends AsyncTask<String, String, Server>{
+		@Override
+		protected Server doInBackground(String... params) {
+			new Server().run();
+			return null;
 		}
-		catch(IOException ioException){
-			ioException.printStackTrace();
-		}
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.lego_car_controller, menu);
-		return true;
 	}
 	
-	class Server implements Runnable{
+	class Server extends Thread{
+		ServerSocket providerSocket;
+		Socket connection = null;
+		ObjectOutputStream out;
+		ObjectInputStream in;
+		String message;
 		
 		public void run(){
+				
 			InetAddress ip;
 			try { 
 				ip = InetAddress.getLocalHost();
@@ -97,7 +85,17 @@ public class LegoCarServer extends Activity {
 				}	
 			}
 		}
-
+		void sendMessage(String msg)
+		{
+			try{
+				out.writeObject(msg);
+				out.flush();
+				System.out.println("server>" + msg);
+			}
+			catch(IOException ioException){
+				ioException.printStackTrace();
+			}
+		}
 	
 	}
 	
