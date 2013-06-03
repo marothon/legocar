@@ -1,0 +1,102 @@
+package com.example.rovercontroller;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+
+import android.os.Bundle;
+import android.app.Activity;
+import android.content.Context;
+import android.view.Menu;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ScrollView;
+import android.widget.TextView;
+
+public class MainActivity extends Activity {
+	private Activity act = this;
+	private Socket socket;
+	private PrintWriter out;
+	private BufferedReader in;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		setupConnection();
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+	
+	public void setReceivedText(final String text) {
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				TextView receivedText = (TextView) act.findViewById(R.id.receivedText);
+				ScrollView scrollView = (ScrollView) act.findViewById(R.id.scrollView1);
+				receivedText.setText(receivedText.getText() + "\n" + text);
+				scrollView.fullScroll(View.FOCUS_DOWN);
+			}
+		});
+	}
+
+	public void setupConnection() {
+		Button connectButton = (Button) act.findViewById(R.id.connectButton);
+		
+		
+		connectButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				new Thread() {
+					public void run() {
+						EditText ipAddress = (EditText) act.findViewById(R.id.ipAddress);
+					    try {
+					    	InetAddress inetAddress = InetAddress.getByName(ipAddress.getText().toString());
+							socket = new Socket(inetAddress, 666);
+							out = new PrintWriter(socket.getOutputStream(), true);
+						    in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+						} catch (UnknownHostException e) {
+							setReceivedText("No such host");
+							e.printStackTrace();
+						} catch (IOException e) {
+							setReceivedText("Couldn't open socket");
+							e.printStackTrace();
+						}
+					    
+					    if(socket == null || !socket.isConnected()) return;
+					    
+					    String receivedText;
+					    try {
+							while(true) {
+ 								receivedText = in.readLine();
+ 								
+ 								//System.out.println(receivedText);
+								if(receivedText != null) {
+									setReceivedText(in.readLine());
+								} else {
+									break;
+								}
+							}
+					    } catch (IOException e) {
+							setReceivedText("Something went wrong...");
+							e.printStackTrace();
+						}
+					}
+				}.start();
+				
+			}
+		});
+	}
+}
