@@ -11,6 +11,7 @@ import java.net.UnknownHostException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -63,7 +64,7 @@ public class MainActivity extends Activity {
 						EditText ipAddress = (EditText) act.findViewById(R.id.ipAddress);
 						try {
 							InetAddress inetAddress = InetAddress.getByName(ipAddress.getText().toString());
-							socket = new Socket(inetAddress, 666);
+							socket = new Socket(inetAddress, 5555);
 							out = new PrintWriter(socket.getOutputStream(),true);
 							in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 						} catch (UnknownHostException e) {
@@ -74,15 +75,18 @@ public class MainActivity extends Activity {
 							e.printStackTrace();
 						}
 
-						if (socket == null || !socket.isConnected())
+						if (socket == null || !socket.isConnected()) {
+							Log.e("FPGA", "Socket failed to create or is otherwise not connected.");
 							return null;
+						}
 
 						String receivedText;
 						try {
 							while (true) {
 								receivedText = in.readLine();
 								if (receivedText != null) {
-									setReceivedText(in.readLine());
+									setReceivedText(receivedText);
+									Log.d("FPGA", "Got a message: " + receivedText);
 								} else {
 									break;
 								}
