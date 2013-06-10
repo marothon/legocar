@@ -8,39 +8,19 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivity" >
 
-    <EditText
-        android:id="@+id/ipAddress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="130dp"
-        android:ems="10" >
-
-        <requestFocus />
-    </EditText>
-
-    <Button
-        android:id="@+id/connectButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/ipAddress"
-        android:layout_alignTop="@+id/ipAddress"
-        android:layout_toRightOf="@+id/ipAddress"
-        android:text="Conn" />
-
     <ScrollView
-        android:id="@+id/scrollView1"
+        android:id="@+id/receivedTextScroll"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/connectButton"
-        android:layout_alignLeft="@+id/ipAddress"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:layout_alignRight="@+id/connectButton"
-        android:layout_marginTop="35dp"
         android:fillViewport="false" >
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical" >
 
             <TextView
@@ -49,7 +29,25 @@
                 android:layout_height="match_parent"
                 android:text="" />
         </LinearLayout>
-
     </ScrollView>
+
+    <Button
+        android:id="@+id/connectButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignRight="@+id/receivedTextScroll"
+        android:layout_alignTop="@+id/ipAddress"
+        android:text="Conn" />
+
+    <EditText
+        android:id="@+id/ipAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/receivedTextScroll"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@+id/connectButton"
+        android:ems="10"
+        android:inputType="numberDecimal" />
 
 </RelativeLayout>
