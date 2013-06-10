@@ -16,4 +16,13 @@
         android:layout_centerVertical="true"
         android:text="SEND" />
 
+    <ImageView
+        android:id="@+id/cameraFrame"
+        android:layout_width="100px"
+        android:layout_height="100px"
+        android:layout_above="@id/button1"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true" />
+
 </RelativeLayout>
