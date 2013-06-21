@@ -65,14 +65,14 @@ public class MainActivity extends Activity {
 			public void run() {
 				TextView receivedText = (TextView) act.findViewById(R.id.receivedText);
 				receivedText.setText(receivedText.getText() + "\n" + text);
-				final ScrollView scrollView = (ScrollView) act.findViewById(R.id.receivedTextScroll);
+//				final ScrollView scrollView = (ScrollView) act.findViewById(R.id.receivedTextScroll);
 				
-				receivedText.post(new Runnable() {	
-					@Override
-					public void run() {
-						scrollView.fullScroll(View.FOCUS_DOWN);
-					}
-				});
+//				receivedText.post(new Runnable() {	
+//					@Override
+//					public void run() {
+//						scrollView.fullScroll(View.FOCUS_DOWN);
+//					}
+//				});
 			}
 		});
 	}
