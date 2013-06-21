@@ -47,7 +47,6 @@
         android:layout_alignLeft="@+id/receivedTextScroll"
         android:layout_alignParentBottom="true"
         android:layout_toLeftOf="@+id/connectButton"
-        android:ems="10"
-        android:inputType="numberDecimal" />
+        android:ems="10" />
 
 </RelativeLayout>

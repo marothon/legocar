@@ -21,7 +21,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
-	public static final int K_PORT = 5555;
+	public static final int K_PORT = 3333;
 	
 	private Activity act = this;
 	private Socket socket;
