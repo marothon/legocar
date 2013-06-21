@@ -7,12 +7,15 @@ import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
+import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.TextureView;
 import android.widget.ImageView;
 
@@ -59,46 +62,64 @@ public class LegoCarServer extends Activity {
 		
 		public void run() {
 			Log.d("FPGA", "THREAD RUNNING 0");
-			cam();
-//			try {
-//				// 1. creating a server socket
-////				providerSocket = new ServerSocket(3333);
-//				// 2. Wait for connection
-////				System.out.println("Waiting for connection");
-//				//connection = providerSocket.accept();
-////				System.out.println("Connection received from "
-////						+ connection.getInetAddress().getHostName());
-//				// 3. get Input and Output streams
-////				out = new ObjectOutputStream(connection.getOutputStream());
-////				out.flush();
-//
-//
-////				in = new ObjectInputStream(connection.getInputStream());
-////				sendMessage("Connection successful");
-////				// 4. The two parts communicate via the input and output
-////				// streams
-////				do {
-////					try {
-////						message = (String) in.readObject();
-////						Log.d("FPGA","client>" + message);
-////						if (message.equals("bye"))
-////							sendMessage("bye");
-////					} catch (ClassNotFoundException classnot) {
-////						System.err.println("Data received in unknown format");
-////					}
-////				} while (!message.equals("bye"));
-//			} catch (IOException ioException) {
-////				ioException.printStackTrace();
-//			} finally {
-//				// 4: Closing connection
-////				try {
-////					in.close();
-////					out.close();
-////					providerSocket.close();
-////				} catch (IOException ioException) {
-////					ioException.printStackTrace();
-////				}
-//			}
+			//cam();
+
+			try {
+				// 1. creating a server socket
+				providerSocket = new ServerSocket(3333);
+				// 2. Wait for connection
+				System.out.println("Waiting for connection");
+				connection = providerSocket.accept();
+				System.out.println("Connection received from "
+						+ connection.getInetAddress().getHostName());
+				// 3. get Input and Output streams
+				out = new ObjectOutputStream(connection.getOutputStream());
+				out.flush();
+				
+				ParcelFileDescriptor pfd = ParcelFileDescriptor.fromSocket(connection);
+				Camera mCamera = getCameraInstance();
+				SurfaceView mPreview = (SurfaceView) act.findViewById(R.id.surfaceView1);
+				
+				MediaRecorder mMediaRecorder = new MediaRecorder();
+				mCamera.unlock();
+				mMediaRecorder.setCamera(mCamera);
+				mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+				mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+				// this is the unofficially supported MPEG2TS format, suitable for streaming (Android 3.0+)
+				mMediaRecorder.setOutputFormat(8);
+				mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+				mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
+				mMediaRecorder.setOutputFile(pfd.getFileDescriptor());
+				mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
+				mMediaRecorder.prepare();
+				mMediaRecorder.start();
+
+				in = new ObjectInputStream(connection.getInputStream());
+				sendMessage("Connection successful");
+				// 4. The two parts communicate via the input and output
+				// streams
+//				do {
+//					try {
+//						message = (String) in.readObject();
+//						Log.d("FPGA","client>" + message);
+//						if (message.equals("bye"))
+//							sendMessage("bye");
+//					} catch (ClassNotFoundException classnot) {
+//						System.err.println("Data received in unknown format");
+//					}
+//				} while (!message.equals("bye"));
+			} catch (IOException ioException) {
+//				ioException.printStackTrace();
+			} finally {
+				// 4: Closing connection
+//				try {
+//					in.close();
+//					out.close();
+//					providerSocket.close();
+//				} catch (IOException ioException) {
+//					ioException.printStackTrace();
+//				}
+			}
 		}
 
 		void sendMessage(String msg) {
@@ -110,7 +131,19 @@ public class LegoCarServer extends Activity {
 				ioException.printStackTrace();
 			}
 		}
+	}
+	
 
+	/** A safe way to get an instance of the Camera object. */
+	public static Camera getCameraInstance(){
+	    Camera c = null;
+	    try {
+	        c = Camera.open(); // attempt to get a Camera instance
+	    }
+	    catch (Exception e){
+	        // Camera is not available (in use or does not exist)
+	    }
+	    return c; // returns null if camera is unavailable
 	}
 
 	/*
