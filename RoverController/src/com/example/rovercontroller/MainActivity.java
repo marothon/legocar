@@ -21,6 +21,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
+	public static final int K_PORT = 5555;
+	
 	private Activity act = this;
 	private Socket socket;
 	private PrintWriter out;
@@ -33,10 +35,22 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		setupConnection();
 	}
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		
+		
+		
+		
+
+		
+		
+		
+	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
 	}
@@ -46,9 +60,15 @@ public class MainActivity extends Activity {
 			@Override
 			public void run() {
 				TextView receivedText = (TextView) act.findViewById(R.id.receivedText);
-				ScrollView scrollView = (ScrollView) act.findViewById(R.id.scrollView1);
 				receivedText.setText(receivedText.getText() + "\n" + text);
-				scrollView.fullScroll(View.FOCUS_DOWN);
+				final ScrollView scrollView = (ScrollView) act.findViewById(R.id.receivedTextScroll);
+				
+				receivedText.post(new Runnable() {	
+					@Override
+					public void run() {
+						scrollView.fullScroll(View.FOCUS_DOWN);
+					}
+				});
 			}
 		});
 	}
@@ -64,7 +84,7 @@ public class MainActivity extends Activity {
 						EditText ipAddress = (EditText) act.findViewById(R.id.ipAddress);
 						try {
 							InetAddress inetAddress = InetAddress.getByName(ipAddress.getText().toString());
-							socket = new Socket(inetAddress, 5555);
+							socket = new Socket(inetAddress, K_PORT);
 							out = new PrintWriter(socket.getOutputStream(),true);
 							in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 						} catch (UnknownHostException e) {
