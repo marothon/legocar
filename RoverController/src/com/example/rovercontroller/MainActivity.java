@@ -8,11 +8,15 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -62,11 +66,13 @@ public class MainActivity extends Activity {
 				new AsyncTask<Void, Void, Void>() {
 					public Void doInBackground(Void... params) {
 						EditText ipAddress = (EditText) act.findViewById(R.id.ipAddress);
+						ParcelFileDescriptor pfd=null;
 						try {
 							InetAddress inetAddress = InetAddress.getByName(ipAddress.getText().toString());
-							socket = new Socket(inetAddress, 5555);
-							out = new PrintWriter(socket.getOutputStream(),true);
-							in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+							socket = new Socket(inetAddress, 3333);
+							pfd = ParcelFileDescriptor.fromSocket(socket);
+//							out = new PrintWriter(socket.getOutputStream(),true);
+//							in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 						} catch (UnknownHostException e) {
 							setReceivedText("No such host");
 							e.printStackTrace();
@@ -79,22 +85,51 @@ public class MainActivity extends Activity {
 							Log.e("FPGA", "Socket failed to create or is otherwise not connected.");
 							return null;
 						}
-
-						String receivedText;
+						MediaPlayer mMediaPlayer = new MediaPlayer();
+						SurfaceView sv = (SurfaceView) act.findViewById(R.id.surfaceView1);
+						
 						try {
-							while (true) {
-								receivedText = in.readLine();
-								if (receivedText != null) {
-									setReceivedText(receivedText);
-									Log.d("FPGA", "Got a message: " + receivedText);
-								} else {
-									break;
-								}
-							}
+							mMediaPlayer.setDataSource(pfd.getFileDescriptor());
+						} catch (IllegalArgumentException e) {
+							e.printStackTrace();
+						} catch (IllegalStateException e) {
+							e.printStackTrace();
 						} catch (IOException e) {
-							setReceivedText("Something went wrong...");
 							e.printStackTrace();
 						}
+						
+					    SurfaceHolder sh = sv.getHolder();
+					    synchronized (this) {
+					       	mMediaPlayer.setDisplay(sv.getHolder());
+					        try {
+								mMediaPlayer.prepare();
+							} catch (IllegalStateException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+					    }
+						
+						mMediaPlayer.start();
+						
+//						while(true);
+//						String receivedText;
+//						try {
+//							while (true) {
+//								receivedText = in.readLine();
+//								if (receivedText != null) {
+//									setReceivedText(receivedText);
+//									Log.d("FPGA", "Got a message: " + receivedText);
+//								} else {
+//									break;
+//								}
+//							}
+//						} catch (IOException e) {
+//							setReceivedText("Something went wrong...");
+//							e.printStackTrace();
+//						}
 						
 						return null;
 					}
