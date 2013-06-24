@@ -16,7 +16,7 @@
         android:layout_centerVertical="true"
         android:text="SEND" />
 
-    <ImageView
+    <TextureView
         android:id="@+id/cameraFrame"
         android:layout_width="100px"
         android:layout_height="100px"
@@ -24,12 +24,5 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true" />
-
-    <SurfaceView
-        android:id="@+id/surfaceView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/cameraFrame"
-        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>
