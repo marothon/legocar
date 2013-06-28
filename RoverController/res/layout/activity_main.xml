@@ -8,16 +8,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivity" >
 
-    <EditText
-        android:id="@+id/ipAddress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="130dp"
-        android:ems="10" >
-
-        <requestFocus />
-    </EditText>
-
     <Button
         android:id="@+id/connectButton"
         android:layout_width="wrap_content"
@@ -25,7 +15,8 @@
         android:layout_alignBottom="@+id/ipAddress"
         android:layout_alignTop="@+id/ipAddress"
         android:layout_toRightOf="@+id/ipAddress"
-        android:text="Conn" />
+        android:text="Conn"
+        tools:ignore="HardcodedText" />
 
     <ScrollView
         android:id="@+id/scrollView1"
@@ -40,7 +31,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical" >
 
             <TextView
@@ -54,10 +45,23 @@
 
     <SurfaceView
         android:id="@+id/surfaceView1"
+        android:layout_width="fill_parent"
+        android:layout_height="10dp"
+        android:layout_above="@+id/ipAddress"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        tools:ignore="PxUsage" />
+
+    <EditText
+        android:id="@+id/ipAddress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/ipAddress"
-        android:layout_alignRight="@+id/ipAddress"
-        android:layout_marginRight="56dp" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="36dp"
+        android:layout_marginLeft="16dp"
+        android:ems="10"
+        android:inputType="text" />
 
 </RelativeLayout>

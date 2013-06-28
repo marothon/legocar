@@ -25,8 +25,8 @@ public final class R {
     }
     public static final class id {
         public static final int action_settings=0x7f080005;
-        public static final int connectButton=0x7f080001;
-        public static final int ipAddress=0x7f080000;
+        public static final int connectButton=0x7f080000;
+        public static final int ipAddress=0x7f080001;
         public static final int receivedText=0x7f080003;
         public static final int scrollView1=0x7f080002;
         public static final int surfaceView1=0x7f080004;
