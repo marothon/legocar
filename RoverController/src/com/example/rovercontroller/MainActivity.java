@@ -11,6 +11,7 @@ import java.net.UnknownHostException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.Intent;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -19,6 +20,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
+
+import com.example.rovercontroller.Controller;
 
 public class MainActivity extends Activity {
 	public static final int K_PORT = 5555;
@@ -33,19 +36,13 @@ public class MainActivity extends Activity {
 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
 		setupConnection();
 	}
 	
 	@Override
 	protected void onStart() {
 		super.onStart();
-		
-		
-		
-		
-
-		
-		
 		
 	}
 
@@ -75,6 +72,7 @@ public class MainActivity extends Activity {
 
 	public void setupConnection() {
 		Button connectButton = (Button) act.findViewById(R.id.connectButton);
+		
 
 		connectButton.setOnClickListener(new OnClickListener() {
 			@Override
@@ -82,39 +80,46 @@ public class MainActivity extends Activity {
 				new AsyncTask<Void, Void, Void>() {
 					public Void doInBackground(Void... params) {
 						EditText ipAddress = (EditText) act.findViewById(R.id.ipAddress);
-						try {
-							InetAddress inetAddress = InetAddress.getByName(ipAddress.getText().toString());
-							socket = new Socket(inetAddress, K_PORT);
-							out = new PrintWriter(socket.getOutputStream(),true);
-							in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-						} catch (UnknownHostException e) {
-							setReceivedText("No such host");
-							e.printStackTrace();
-						} catch (IOException e) {
-							setReceivedText("Couldn't open socket");
-							e.printStackTrace();
-						}
+//						try {
+//							InetAddress inetAddress = InetAddress.getByName(ipAddress.getText().toString());
+//							socket = new Socket(inetAddress, K_PORT);
+//							out = new PrintWriter(socket.getOutputStream(),true);
+//							in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-						if (socket == null || !socket.isConnected()) {
-							Log.e("FPGA", "Socket failed to create or is otherwise not connected.");
-							return null;
-						}
+							// here start controller screen
+							
+							Intent intent = new Intent(getApplicationContext(), Controller.class);
+						    startActivity(intent);
+							
+							
+//						} catch (UnknownHostException e) {
+//							setReceivedText("No such host");
+//							e.printStackTrace();
+//						} catch (IOException e) {
+//							setReceivedText("Couldn't open socket");
+//							e.printStackTrace();
+//						}
 
-						String receivedText;
-						try {
-							while (true) {
-								receivedText = in.readLine();
-								if (receivedText != null) {
-									setReceivedText(receivedText);
-									Log.d("FPGA", "Got a message: " + receivedText);
-								} else {
-									break;
-								}
-							}
-						} catch (IOException e) {
-							setReceivedText("Something went wrong...");
-							e.printStackTrace();
-						}
+//						if (socket == null || !socket.isConnected()) {
+//							Log.e("FPGA", "Socket failed to create or is otherwise not connected.");
+//							return null;
+//						}
+
+//						String receivedText;
+//						try {
+//							while (true) {
+//								receivedText = in.readLine();
+//								if (receivedText != null) {
+//									setReceivedText(receivedText);
+//									Log.d("FPGA", "Got a message: " + receivedText);
+//								} else {
+//									break;
+//								}
+//							}
+//						} catch (IOException e) {
+//							setReceivedText("Something went wrong...");
+//							e.printStackTrace();
+//						}
 						
 						return null;
 					}
