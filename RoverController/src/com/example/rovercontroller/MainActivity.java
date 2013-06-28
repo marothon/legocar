@@ -7,11 +7,14 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -25,6 +28,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -32,13 +36,9 @@ public class MainActivity extends Activity {
 	public static final int K_PORT = 3333;
 
 	private Activity act = this;
-	private Socket socket;
-	private PrintWriter out;
-	private BufferedReader in;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		setupConnection();
@@ -86,35 +86,22 @@ public class MainActivity extends Activity {
 		});
 	}
 
-	class CameraStream extends AsyncTask<Void, Void, Void> implements
-			SurfaceHolder.Callback {
-		SurfaceView sv;
-		SurfaceHolder sh;
-		MediaPlayer mMediaPlayer; 
+	class CameraStream extends AsyncTask<Void, Void, Void> {
+		private Socket socket;
+		private ObjectInputStream in;
 
 		public CameraStream() {
-			sv = (SurfaceView) act.findViewById(R.id.surfaceView1);
-			sh = sv.getHolder();
-			sh.addCallback(this);
-			mMediaPlayer = new MediaPlayer();
-			mMediaPlayer.setDisplay(sh);
 		}
 
 		public Void doInBackground(Void... params) {
 			EditText ipAddress = (EditText) act.findViewById(R.id.ipAddress);
-			ParcelFileDescriptor pfd = null;
-			BufferedInputStream bis;
-			PrintWriter pw;
-			File f=null;
+
+			Bitmap image;
 			try {
 				InetAddress inetAddress = InetAddress.getByName(ipAddress
 						.getText().toString());
 				socket = new Socket(inetAddress, 3333);
-				f = File.createTempFile("fpgastream", ".3gp", act.getCacheDir());
-				bis = new BufferedInputStream(socket.getInputStream());
-				pw = new PrintWriter(f);
-				new BufferedVideoStream(pw, bis).start();
-				Thread.sleep(5000);
+				in = new ObjectInputStream(socket.getInputStream());
 				// out = new PrintWriter(socket.getOutputStream(),true);
 				// in = new BufferedReader(new
 				// InputStreamReader(socket.getInputStream()));
@@ -127,9 +114,6 @@ public class MainActivity extends Activity {
 				setReceivedText("Couldn't open socket");
 				e.printStackTrace();
 				return null;
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				return null;
 			}
 
 			if (socket == null || !socket.isConnected()) {
@@ -137,83 +121,36 @@ public class MainActivity extends Activity {
 						"Socket failed to create or is otherwise not connected.");
 				return null;
 			}
-			Log.d("FPGA", f.getAbsolutePath());
+
+			// String receivedText;
+			byte img[] = null;
 			try {
-				mMediaPlayer.setDataSource(f.getAbsolutePath());
-				mMediaPlayer.prepareAsync();
-				mMediaPlayer.start();
-			}catch (Exception e) {
+				while (true) {
+					img = (byte[]) in.readObject();
+					if (img != null) {
+						showImage(img);
+						Log.d("FPGA", "Got an image");
+					} else {
+						break;
+					}
+				}
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
-			// while(true);
-			// String receivedText;
-			// try {
-			// while (true) {
-			// receivedText = in.readLine();
-			// if (receivedText != null) {
-			// setReceivedText(receivedText);
-			// Log.d("FPGA", "Got a message: " + receivedText);
-			// } else {
-			// break;
-			// }
-			// }
-			// } catch (IOException e) {
-			// setReceivedText("Something went wrong...");
-			// e.printStackTrace();
-			// }
 
 			return null;
 		}
 
-		@Override
-		public void surfaceChanged(SurfaceHolder holder, int format, int width,
-				int height) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void surfaceCreated(SurfaceHolder holder) {
-			mMediaPlayer.setDisplay(sh);
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void surfaceDestroyed(SurfaceHolder holder) {
-			// TODO Auto-generated method stub
-
-		}
-	}
-	
-	/**
-	 * 
-	 * 
-	 * 
-	 * @author marothon
-	 *
-	 */
-	class BufferedVideoStream extends Thread{
-		private PrintWriter _pw;
-		private BufferedInputStream _bis;
-			
-		public BufferedVideoStream(PrintWriter pw, BufferedInputStream bis){
-			_pw = pw;
-			_bis = bis;
-		}
-		
-		@Override
-		public void run() {
-			while(true){
-				try {
-					_pw.write(_bis.read());
-				} catch (IOException e) {
-					e.printStackTrace();
-					break;
+		private void showImage(final byte img[]) {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					Bitmap image = BitmapFactory.decodeByteArray(img, 0,
+							img.length);
+					ImageView iv = (ImageView) act.findViewById(R.id.cameraFrame);
+					iv.setImageBitmap(image);
 				}
-			}
+			});
 		}
-		
 	}
 }
