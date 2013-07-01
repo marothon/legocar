@@ -26,13 +26,15 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-public class MainActivity extends Activity {
+public class ControllerApp extends Activity {
 	public static final int K_PORT = 3333;
 
 	private Activity act = this;
@@ -40,7 +42,11 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+		//Remove title bar
+		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+		//Remove notification bar
+		this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		setContentView(R.layout.activity_controllerapp);
 		setupConnection();
 	}
 
