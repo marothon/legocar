@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.Buffer;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -108,9 +109,6 @@ public class ControllerApp extends Activity {
 						.getText().toString());
 				socket = new Socket(inetAddress, 3333);
 				in = new ObjectInputStream(socket.getInputStream());
-				// out = new PrintWriter(socket.getOutputStream(),true);
-				// in = new BufferedReader(new
-				// InputStreamReader(socket.getInputStream()));
 
 			} catch (UnknownHostException e) {
 				setReceivedText("No such host");
@@ -146,13 +144,14 @@ public class ControllerApp extends Activity {
 
 			return null;
 		}
-
+		
+		Bitmap image = null;
 		private void showImage(final byte img[]) {
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
 					Bitmap image = BitmapFactory.decodeByteArray(img, 0,
-							img.length);
+							img.length);;
 					ImageView iv = (ImageView) act.findViewById(R.id.cameraFrame);
 					iv.setImageBitmap(image);
 				}
