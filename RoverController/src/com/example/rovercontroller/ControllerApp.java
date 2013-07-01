@@ -34,6 +34,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class ControllerApp extends Activity {
 	public static final int K_PORT = 3333;
@@ -43,10 +44,11 @@ public class ControllerApp extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		//Remove title bar
+		// Remove title bar
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-		//Remove notification bar
-		this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		// Remove notification bar
+		this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		setContentView(R.layout.activity_controllerapp);
 		setupConnection();
 	}
@@ -66,18 +68,8 @@ public class ControllerApp extends Activity {
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				TextView receivedText = (TextView) act
-						.findViewById(R.id.receivedText);
-				receivedText.setText(receivedText.getText() + "\n" + text);
-				// final ScrollView scrollView = (ScrollView)
-				// act.findViewById(R.id.receivedTextScroll);
-
-				// receivedText.post(new Runnable() {
-				// @Override
-				// public void run() {
-				// scrollView.fullScroll(View.FOCUS_DOWN);
-				// }
-				// });
+				Toast.makeText(getApplicationContext(), text,
+						Toast.LENGTH_SHORT).show();
 			}
 		});
 	}
@@ -125,7 +117,8 @@ public class ControllerApp extends Activity {
 						"Socket failed to create or is otherwise not connected.");
 				return null;
 			}
-
+			/* Found host, hide connection window */
+			hideConnectionMenu(true);
 			// String receivedText;
 			byte img[] = null;
 			try {
@@ -140,19 +133,44 @@ public class ControllerApp extends Activity {
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
+				hideConnectionMenu(false);
+				/* Connection lost, restore connection button */
+				setReceivedText("Lost connection to LEGO-car");
 			}
 
 			return null;
 		}
-		
+
+		private void hideConnectionMenu(final boolean yes) {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					View ipAddress = act.findViewById(R.id.ipAddress);
+					View butt = act.findViewById(R.id.connectButton);
+					View lCtrl = act.findViewById(R.id.leftControl);
+					View rCtrl = act.findViewById(R.id.rightControl);
+					View image = act.findViewById(R.id.cameraFrame);
+					int vis = yes ? View.INVISIBLE : View.VISIBLE;
+					ipAddress.setVisibility(vis);
+					butt.setVisibility(vis);
+					vis = !yes ? View.INVISIBLE : View.VISIBLE;
+					image.setVisibility(vis);
+					lCtrl.setVisibility(vis);
+					rCtrl.setVisibility(vis);
+				}
+			});
+		}
+
 		Bitmap image = null;
+
 		private void showImage(final byte img[]) {
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
 					Bitmap image = BitmapFactory.decodeByteArray(img, 0,
-							img.length);;
-					ImageView iv = (ImageView) act.findViewById(R.id.cameraFrame);
+							img.length);
+					ImageView iv = (ImageView) act
+							.findViewById(R.id.cameraFrame);
 					iv.setImageBitmap(image);
 				}
 			});

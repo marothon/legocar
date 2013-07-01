@@ -18,7 +18,9 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true" android:contentDescription="TODO"/>
+        android:layout_alignParentTop="true" 
+        android:contentDescription="TODO"
+        android:visibility="invisible" />
 
     <Button
         android:id="@+id/connectButton"
@@ -30,39 +32,39 @@
         android:text="Conn"
         tools:ignore="HardcodedText" />
 
-    <ScrollView
-        android:id="@+id/scrollView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/connectButton"
-        android:layout_alignLeft="@+id/ipAddress"
-        android:layout_alignParentTop="true"
-        android:layout_alignRight="@+id/connectButton"
-        android:layout_marginTop="35dp"
-        android:fillViewport="false" >
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" >
-
-            <TextView
-                android:id="@+id/receivedText"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:text="" />
-        </LinearLayout>
-    </ScrollView>
-
     <EditText
         android:id="@+id/ipAddress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginBottom="36dp"
-        android:layout_marginLeft="16dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="34dp"
         android:ems="10"
-        android:inputType="text" />
+        android:inputType="text" >
+
+        <requestFocus />
+    </EditText>
+
+    <com.example.rovercontroller.VerticalSeekBar
+        android:id="@+id/leftControl"
+        android:layout_marginLeft="17.5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:visibility="invisible"
+        android:progress="50"
+        android:max="100" />
+
+    <com.example.rovercontroller.VerticalSeekBar
+        android:id="@+id/rightControl"
+        android:layout_marginRight="17.5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:visibility="invisible"
+        android:progress="50"
+        android:max="100" />
 
 </RelativeLayout>
