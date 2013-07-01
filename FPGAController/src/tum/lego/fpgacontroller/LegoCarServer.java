@@ -25,14 +25,14 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
 import java.io.*;
 import java.net.*;
 import java.util.List;
 
 public class LegoCarServer extends Activity {
-	// public static String wifi_mod_ip = "1.2.3.4";
-	// public static int socket = 3003;
 	private static Activity act;
 
 	@Override
@@ -60,51 +60,36 @@ public class LegoCarServer extends Activity {
 		public void cam() {
 			Log.d("FPGA", "Get cam");
 			int[] fpsrange = new int[2];
-			
+
 			Camera cam = Camera.open();
 			Camera.Parameters param = cam.getParameters();
-//			List<int[]> fpslist = param.getSupportedPreviewFpsRange();
-//			Log.d("camera", "size= " + fpslist.size());
-//			for (int i=0;i < fpslist.size();i++) {
-//			 Log.d("camera", i + " fps= " + fpslist.get(i)[Camera.Parameters.PREVIEW_FPS_MIN_INDEX]);
-//			 Log.d("camera", i + " fps= " + fpslist.get(i)[Camera.Parameters.PREVIEW_FPS_MAX_INDEX]);
-//			}
-			param.setPreviewFpsRange(10000,10000);
+
+			param.setPreviewFpsRange(10000, 10000);
 			param.setRotation(90);
 			cam.setParameters(param);
-			
-			for(int i=0; i<500; i++) cam.addCallbackBuffer(new byte[cam.getParameters().getPreviewSize().height*cam.getParameters().getPreviewSize().width*2]);
+
+			for (int i = 0; i < 500; i++)
+				cam.addCallbackBuffer(new byte[(int)((float) cam.getParameters()
+						.getPreviewSize().height
+						* cam.getParameters().getPreviewSize().width * 1.5)]);
 			cam.setPreviewCallbackWithBuffer(new Snapshot(out));
 			cam.startPreview();
 		}
 
 		public void run() {
-			Log.d("FPGA", "THREAD RUNNING 0");
 			try {
 				// 1. creating a server socket
 				providerSocket = new ServerSocket(3333);
 				// 2. Wait for connection
-				System.out.println("Waiting for connection");
+				console("Waiting for connection");
 				connection = providerSocket.accept();
-				System.out.println("Connection received from "
+				console("Connection received from "
 						+ connection.getInetAddress().getHostName());
 				// 3. get Input and Output streams
 				out = new ObjectOutputStream(connection.getOutputStream());
 				cam();
-				while(true){
-				}
-				
-			} catch (IOException ioException) {
-				// ioException.printStackTrace();
-			} finally {
-				// 4: Closing connection
-				try {
-					// in.close();
-					out.close();
-					providerSocket.close();
-				} catch (IOException ioException) {
-					ioException.printStackTrace();
-				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 
@@ -130,6 +115,24 @@ public class LegoCarServer extends Activity {
 		return c; // returns null if camera is unavailable
 	}
 
+	public void console(final String msg){
+		runOnUiThread(new Runnable(){
+			@Override
+			public void run(){
+				final ScrollView sv = (ScrollView) act.findViewById(R.id.scrollView1);
+				TextView tv = ((TextView)sv.findViewById(R.id.console));
+				tv.setText(tv.getText()+"\n"+msg);
+				sv.post(new Runnable(){
+					@Override
+					public void run() {
+						sv.fullScroll(View.FOCUS_DOWN);
+					}
+					
+				});
+			}
+		});
+	}
+
 	/*
 	 * Class to capture "preview" frames of camera, i.e. camera frames before
 	 * capturing an image
@@ -146,12 +149,13 @@ public class LegoCarServer extends Activity {
 
 		public Snapshot() {
 		}
-		
+
 		Parameters parameters;
 		Camera.Size size;
 		YuvImage yuvImage;
 		byte[] imageBytes;
 		ByteArrayOutputStream outsie = new ByteArrayOutputStream();
+
 		public void onPreviewFrame(byte[] data, Camera camera) {
 			outsie.reset();
 			parameters = camera.getParameters();
@@ -161,21 +165,26 @@ public class LegoCarServer extends Activity {
 			// TextureView tv;
 			ph = size.height;
 			pw = size.width;
-			Log.d("FPGA", "ph: "+ph+"pw: "+pw);
-			yuvImage = new YuvImage(data, imageFormat, pw, ph,
-					null);
+			Log.d("FPGA", "ph: " + ph + "pw: " + pw);
+			yuvImage = new YuvImage(data, imageFormat, pw, ph, null);
 			camera.addCallbackBuffer(data);
-			yuvImage.compressToJpeg(new Rect(0, 0, pw, ph), 50, outsie);
+			yuvImage.compressToJpeg(new Rect(0, 0, pw, ph), 100, outsie);
 			imageBytes = outsie.toByteArray();
-//			Bitmap image = BitmapFactory.decodeByteArray(imageBytes, 0,
-//					imageBytes.length);
+			// Bitmap image = BitmapFactory.decodeByteArray(imageBytes, 0,
+			// imageBytes.length);
 			try {
 				out.writeObject(imageBytes);
 				out.flush();
 				Log.d("FPGA", "IMAGE SENT MAN");
 			} catch (Exception e) {
-				Log.d("FPGA", "FAILED TO SEND IMAGE, MAN");
+				Log.d("FPGA", "FAILED TO SEND IMAGE, MAN. Restarting wait.");
 				e.printStackTrace();
+				try {
+					out.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}
 			// iv.setImageBitmap(image);
 
