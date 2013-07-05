@@ -14,8 +14,6 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.Buffer;
 
-import com.example.rovercontroller.R;
-
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
