@@ -1,4 +1,4 @@
-package com.example.rovercontroller;
+package tum.lego.rovercontroller;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -13,6 +13,8 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.Buffer;
+
+import com.example.rovercontroller.R;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

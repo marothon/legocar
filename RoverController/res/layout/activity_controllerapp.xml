@@ -45,7 +45,7 @@
         <requestFocus />
     </EditText>
 
-    <com.example.rovercontroller.VerticalSeekBar
+    <tum.lego.rovercontroller.VerticalSeekBar
         android:id="@+id/leftControl"
         android:layout_marginLeft="17.5dp"
         android:layout_width="wrap_content"
@@ -56,7 +56,7 @@
         android:progress="50"
         android:max="100" />
 
-    <com.example.rovercontroller.VerticalSeekBar
+    <tum.lego.rovercontroller.VerticalSeekBar
         android:id="@+id/rightControl"
         android:layout_marginRight="17.5dp"
         android:layout_width="wrap_content"
