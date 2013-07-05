@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OptionalDataException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -76,7 +78,7 @@ public class ControllerApp extends Activity {
 
 	public void setupConnection() {
 		Button connectButton = (Button) act.findViewById(R.id.connectButton);
-
+		
 		connectButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -88,7 +90,8 @@ public class ControllerApp extends Activity {
 	class CameraStream extends AsyncTask<Void, Void, Void> {
 		private Socket socket;
 		private ObjectInputStream in;
-
+		private ObjectOutputStream out;
+		
 		public CameraStream() {
 		}
 
@@ -101,7 +104,7 @@ public class ControllerApp extends Activity {
 						.getText().toString());
 				socket = new Socket(inetAddress, 3333);
 				in = new ObjectInputStream(socket.getInputStream());
-
+				out = new ObjectOutputStream(socket.getOutputStream());
 			} catch (UnknownHostException e) {
 				setReceivedText("No such host");
 				e.printStackTrace();
@@ -119,6 +122,36 @@ public class ControllerApp extends Activity {
 			}
 			/* Found host, hide connection window */
 			hideConnectionMenu(true);
+			
+			/* Add camera photo button */
+			Button butt = (Button) act.findViewById(R.id.cameraButton);
+			butt.setOnClickListener(new OnClickListener(){
+
+				@Override
+				public void onClick(View v) {
+					/* Request photo picture */
+					byte[] message = new byte[4];
+					byte[] img = null;
+					message[0] = 'P';
+					message[1] = 'I';
+					message[2] = 'C';
+					message[3] = 'T';
+					try {
+						out.write(message);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					/* Wait for photo image */
+					try {
+						img = (byte[]) in.readObject();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
+				}
+			});
+			
+			
 			// String receivedText;
 			byte img[] = null;
 			try {
@@ -137,7 +170,7 @@ public class ControllerApp extends Activity {
 				/* Connection lost, restore connection button */
 				setReceivedText("Lost connection to LEGO-car");
 			}
-
+			
 			return null;
 		}
 
@@ -150,6 +183,7 @@ public class ControllerApp extends Activity {
 					View lCtrl = act.findViewById(R.id.leftControl);
 					View rCtrl = act.findViewById(R.id.rightControl);
 					View image = act.findViewById(R.id.cameraFrame);
+					View cam = act.findViewById(R.id.cameraButton);
 					int vis = yes ? View.INVISIBLE : View.VISIBLE;
 					ipAddress.setVisibility(vis);
 					butt.setVisibility(vis);
@@ -157,6 +191,7 @@ public class ControllerApp extends Activity {
 					image.setVisibility(vis);
 					lCtrl.setVisibility(vis);
 					rCtrl.setVisibility(vis);
+					cam.setVisibility(vis);
 				}
 			});
 		}
