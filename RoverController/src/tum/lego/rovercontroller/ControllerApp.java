@@ -123,35 +123,6 @@ public class ControllerApp extends Activity {
 			/* Found host, hide connection window */
 			hideConnectionMenu(true);
 			
-			/* Add camera photo button */
-			Button butt = (Button) act.findViewById(R.id.cameraButton);
-			butt.setOnClickListener(new OnClickListener(){
-
-				@Override
-				public void onClick(View v) {
-					/* Request photo picture */
-					byte[] message = new byte[4];
-					byte[] img = null;
-					message[0] = 'P';
-					message[1] = 'I';
-					message[2] = 'C';
-					message[3] = 'T';
-					try {
-						out.write(message);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					/* Wait for photo image */
-					try {
-						img = (byte[]) in.readObject();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					
-				}
-			});
-			
-			
 			// String receivedText;
 			byte img[] = null;
 			try {
@@ -183,7 +154,6 @@ public class ControllerApp extends Activity {
 					View lCtrl = act.findViewById(R.id.leftControl);
 					View rCtrl = act.findViewById(R.id.rightControl);
 					View image = act.findViewById(R.id.cameraFrame);
-					View cam = act.findViewById(R.id.cameraButton);
 					int vis = yes ? View.INVISIBLE : View.VISIBLE;
 					ipAddress.setVisibility(vis);
 					butt.setVisibility(vis);
@@ -191,7 +161,6 @@ public class ControllerApp extends Activity {
 					image.setVisibility(vis);
 					lCtrl.setVisibility(vis);
 					rCtrl.setVisibility(vis);
-					cam.setVisibility(vis);
 				}
 			});
 		}
