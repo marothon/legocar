@@ -24,11 +24,13 @@ import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.app.Activity;
 import android.util.Log;
+import android.view.DragEvent;
 import android.view.Menu;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnDragListener;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -179,5 +181,60 @@ public class ControllerApp extends Activity {
 				}
 			});
 		}
+	}
+	/* Sends commands as soon as the values on the slides change */
+	class CommandStream extends AsyncTask<Void, Void, Void>{
+		ObjectOutputStream out;
+		public CommandStream(ObjectOutputStream o){
+			out = o;
+		}
+		@Override
+		protected Void doInBackground(Void... params) {
+			VerticalSeekBar left_vsb = (VerticalSeekBar) act.findViewById(R.id.leftControl);
+			VerticalSeekBar right_vsb = (VerticalSeekBar) act.findViewById(R.id.rightControl);
+			left_vsb.setOnDragListener(new CommandListener(out, true));
+			right_vsb.setOnDragListener(new CommandListener(out, false));
+			return null;
+		}
+		
+	}
+	
+	class CommandListener implements OnDragListener{
+		ObjectOutputStream out;
+		CommandInterface comm;
+		boolean isLeft;
+		
+		public CommandListener(ObjectOutputStream out, boolean left){
+			this.out = out;
+			isLeft = left;
+			comm = new CommandInterface();
+		}
+		
+		@Override
+		public boolean onDrag(View self, DragEvent draggy) {
+			if(draggy.getAction() != draggy.ACTION_DRAG_ENDED) return false;
+			
+			int leftVal, rightVal;
+			if(isLeft){ 
+				leftVal = (((VerticalSeekBar) self).getProgress()-50)*2;
+				rightVal = (((VerticalSeekBar) act.findViewById(R.id.rightControl)).getProgress()-50)*2;
+			}else{
+				rightVal = (((VerticalSeekBar) self).getProgress()-50)*2;
+				leftVal = (((VerticalSeekBar) act.findViewById(R.id.leftControl)).getProgress()-50)*2;
+			}
+			sendInput(leftVal, rightVal);
+			return false;
+		}
+		
+		private void sendInput(int leftVal, int rightVal){
+			short command = comm.createCommand(leftVal, rightVal, true);
+			try {
+				out.writeShort(command);
+			} catch (IOException e) {
+				Log.d("ROVER", "Failed to send command: "+e.toString());
+				e.printStackTrace();
+			}
+		}
+		
 	}
 }
