@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OptionalDataException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -76,7 +78,7 @@ public class ControllerApp extends Activity {
 
 	public void setupConnection() {
 		Button connectButton = (Button) act.findViewById(R.id.connectButton);
-
+		
 		connectButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -88,7 +90,8 @@ public class ControllerApp extends Activity {
 	class CameraStream extends AsyncTask<Void, Void, Void> {
 		private Socket socket;
 		private ObjectInputStream in;
-
+		private ObjectOutputStream out;
+		
 		public CameraStream() {
 		}
 
@@ -101,7 +104,7 @@ public class ControllerApp extends Activity {
 						.getText().toString());
 				socket = new Socket(inetAddress, 3333);
 				in = new ObjectInputStream(socket.getInputStream());
-
+				out = new ObjectOutputStream(socket.getOutputStream());
 			} catch (UnknownHostException e) {
 				setReceivedText("No such host");
 				e.printStackTrace();
@@ -119,6 +122,7 @@ public class ControllerApp extends Activity {
 			}
 			/* Found host, hide connection window */
 			hideConnectionMenu(true);
+			
 			// String receivedText;
 			byte img[] = null;
 			try {
@@ -137,7 +141,7 @@ public class ControllerApp extends Activity {
 				/* Connection lost, restore connection button */
 				setReceivedText("Lost connection to LEGO-car");
 			}
-
+			
 			return null;
 		}
 
