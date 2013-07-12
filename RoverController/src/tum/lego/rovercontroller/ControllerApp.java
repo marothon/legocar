@@ -90,10 +90,10 @@ public class ControllerApp extends Activity {
 	}
 
 	class CameraStream extends AsyncTask<Void, Void, Void> {
-		private Socket socket;
+		private Socket cameraSocket, fpgaSocket;
 		private ObjectInputStream in;
 		private ObjectOutputStream out;
-		
+		private static final String FPGA_IP="";
 		public CameraStream() {
 		}
 
@@ -104,9 +104,11 @@ public class ControllerApp extends Activity {
 			try {
 				InetAddress inetAddress = InetAddress.getByName(ipAddress
 						.getText().toString());
-				socket = new Socket(inetAddress, 3333);
-				in = new ObjectInputStream(socket.getInputStream());
-				out = new ObjectOutputStream(socket.getOutputStream());
+				cameraSocket = new Socket(inetAddress, 3333);
+//				fpgaSocket = new Socket(FPGA_IP, 2000);
+				
+//				in = new ObjectInputStream(cameraSocket.getInputStream());
+				out = new ObjectOutputStream(fpgaSocket.getOutputStream());
 			} catch (UnknownHostException e) {
 				setReceivedText("No such host");
 				e.printStackTrace();
@@ -117,32 +119,37 @@ public class ControllerApp extends Activity {
 				return null;
 			}
 
-			if (socket == null || !socket.isConnected()) {
-				Log.e("FPGA",
-						"Socket failed to create or is otherwise not connected.");
-				return null;
-			}
+//			if (cameraSocket == null || !cameraSocket.isConnected() || fpgaSocket == null || !fpgaSocket.isConnected()) {
+//				Log.e("Rover",
+//						"Socket failed to create or is otherwise not connected.");
+//				return null;
+//			}
 			/* Found host, hide connection window */
 			hideConnectionMenu(true);
-			
-			// String receivedText;
-			byte img[] = null;
 			try {
-				while (true) {
-					img = (byte[]) in.readObject();
-					if (img != null) {
-						showImage(img);
-						Log.d("FPGA", "Got an image");
-					} else {
-						break;
-					}
-				}
-			} catch (Exception e) {
+				out.writeObject(new String("HEY DAVID!"));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
-				hideConnectionMenu(false);
-				/* Connection lost, restore connection button */
-				setReceivedText("Lost connection to LEGO-car");
 			}
+			// String receivedText;
+//			byte img[] = null;
+//			try {
+//				while (true) {
+//					img = (byte[]) in.readObject();
+//					if (img != null) {
+//						showImage(img);
+//						Log.d("FPGA", "Got an image");
+//					} else {
+//						break;
+//					}
+//				}
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//				hideConnectionMenu(false);
+//				/* Connection lost, restore connection button */
+//				setReceivedText("Lost connection to LEGO-car");
+//			}
 			
 			return null;
 		}
