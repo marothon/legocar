@@ -1,45 +1,26 @@
 package tum.lego.rovercontroller;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OptionalDataException;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.nio.Buffer;
-
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
 import android.app.Activity;
 import android.util.Log;
-import android.view.DragEvent;
 import android.view.Menu;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnDragListener;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.SeekBar;
-import android.widget.SeekBar.OnSeekBarChangeListener;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class ControllerApp extends Activity {
@@ -236,7 +217,6 @@ public class ControllerApp extends Activity {
 
 		@Override
 		public void onProgressChanged(SeekBar self, int arg1, boolean arg2) {
-			Log.d("Rover", "Progress change");
 			int leftVal, rightVal;
 			if(isLeft){ 
 				leftVal = (((VerticalSeekBar) self).getProgress()-50)*2;
