@@ -37,6 +37,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ScrollView;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -93,21 +95,21 @@ public class ControllerApp extends Activity {
 		private Socket cameraSocket, fpgaSocket;
 		private ObjectInputStream in;
 		private ObjectOutputStream out;
-		private static final String FPGA_IP="";
+		private static final String FPGA_IP="192.168.43.112";
 		public CameraStream() {
 		}
 
 		public Void doInBackground(Void... params) {
 			EditText ipAddress = (EditText) act.findViewById(R.id.ipAddress);
-
+			String ipString = ipAddress.getText().toString().equals("") ? "192.168.43.1" : ipAddress.getText().toString();  
 			Bitmap image;
 			try {
-				InetAddress inetAddress = InetAddress.getByName(ipAddress
-						.getText().toString());
+				Log.d("Rover", ipString);
+				InetAddress inetAddress = InetAddress.getByName(ipString);
 				cameraSocket = new Socket(inetAddress, 3333);
-//				fpgaSocket = new Socket(FPGA_IP, 2000);
+				fpgaSocket = new Socket(FPGA_IP, 2000);
 				
-//				in = new ObjectInputStream(cameraSocket.getInputStream());
+				in = new ObjectInputStream(cameraSocket.getInputStream());
 				out = new ObjectOutputStream(fpgaSocket.getOutputStream());
 			} catch (UnknownHostException e) {
 				setReceivedText("No such host");
@@ -119,37 +121,38 @@ public class ControllerApp extends Activity {
 				return null;
 			}
 
-//			if (cameraSocket == null || !cameraSocket.isConnected() || fpgaSocket == null || !fpgaSocket.isConnected()) {
-//				Log.e("Rover",
-//						"Socket failed to create or is otherwise not connected.");
-//				return null;
-//			}
+			if (cameraSocket == null || !cameraSocket.isConnected() || fpgaSocket == null || !fpgaSocket.isConnected()) {
+				Log.e("Rover",
+						"Sockets have failed to be created or are otherwise not connected.");
+				return null;
+			}
 			/* Found host, hide connection window */
 			hideConnectionMenu(true);
 			try {
-				out.writeObject(new String("HEY DAVID!"));
+				out.writeObject("I HAVE CONNECTED");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			// String receivedText;
-//			byte img[] = null;
-//			try {
-//				while (true) {
-//					img = (byte[]) in.readObject();
-//					if (img != null) {
-//						showImage(img);
-//						Log.d("FPGA", "Got an image");
-//					} else {
-//						break;
-//					}
-//				}
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//				hideConnectionMenu(false);
-//				/* Connection lost, restore connection button */
-//				setReceivedText("Lost connection to LEGO-car");
-//			}
+			new CommandStream(out).start();
+//			// String receivedText;
+			byte img[] = null;
+			try {
+				while (true) {
+					img = (byte[]) in.readObject();
+					if (img != null) {
+						showImage(img);
+						Log.d("FPGA", "Got an image");
+					} else {
+						break;
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				hideConnectionMenu(false);
+				/* Connection lost, restore connection button */
+				setReceivedText("Lost connection to LEGO-car");
+			}
 			
 			return null;
 		}
@@ -175,14 +178,14 @@ public class ControllerApp extends Activity {
 		}
 
 		Bitmap image = null;
-
+		ImageView iv = null;
 		private void showImage(final byte img[]) {
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					Bitmap image = BitmapFactory.decodeByteArray(img, 0,
+					image = BitmapFactory.decodeByteArray(img, 0,
 							img.length);
-					ImageView iv = (ImageView) act
+					iv = (ImageView) act
 							.findViewById(R.id.cameraFrame);
 					iv.setImageBitmap(image);
 				}
@@ -190,26 +193,27 @@ public class ControllerApp extends Activity {
 		}
 	}
 	/* Sends commands as soon as the values on the slides change */
-	class CommandStream extends AsyncTask<Void, Void, Void>{
+	class CommandStream extends Thread{
 		ObjectOutputStream out;
 		public CommandStream(ObjectOutputStream o){
 			out = o;
 		}
-		@Override
-		protected Void doInBackground(Void... params) {
+		
+		public void run(){
 			VerticalSeekBar left_vsb = (VerticalSeekBar) act.findViewById(R.id.leftControl);
 			VerticalSeekBar right_vsb = (VerticalSeekBar) act.findViewById(R.id.rightControl);
-			left_vsb.setOnDragListener(new CommandListener(out, true));
-			right_vsb.setOnDragListener(new CommandListener(out, false));
-			return null;
+			left_vsb.setOnSeekBarChangeListener(new CommandListener(out, true));
+			right_vsb.setOnSeekBarChangeListener(new CommandListener(out, false));
+			Log.d("Rover", "Set the listeners");
 		}
 		
 	}
 	
-	class CommandListener implements OnDragListener{
+	class CommandListener implements VerticalSeekBar.OnSeekBarChangeListener{
 		ObjectOutputStream out;
 		CommandInterface comm;
 		boolean isLeft;
+		String lastCommand;
 		
 		public CommandListener(ObjectOutputStream out, boolean left){
 			this.out = out;
@@ -217,10 +221,22 @@ public class ControllerApp extends Activity {
 			comm = new CommandInterface();
 		}
 		
+		private void sendInput(int leftVal, int rightVal){
+			String command = comm.createCommand(leftVal, rightVal);
+			lastCommand = command;
+			Log.d("Rover","Sending: "+command);
+			try {
+				out.writeObject(command);
+				Log.d("Rover","Sent");
+			} catch (IOException e) {
+				Log.d("ROVER", "Failed to send command: "+e.toString());
+				e.printStackTrace();
+			}
+		}
+
 		@Override
-		public boolean onDrag(View self, DragEvent draggy) {
-			if(draggy.getAction() != draggy.ACTION_DRAG_ENDED) return false;
-			
+		public void onProgressChanged(SeekBar self, int arg1, boolean arg2) {
+			Log.d("Rover", "Progress change");
 			int leftVal, rightVal;
 			if(isLeft){ 
 				leftVal = (((VerticalSeekBar) self).getProgress()-50)*2;
@@ -230,17 +246,14 @@ public class ControllerApp extends Activity {
 				leftVal = (((VerticalSeekBar) act.findViewById(R.id.leftControl)).getProgress()-50)*2;
 			}
 			sendInput(leftVal, rightVal);
-			return false;
 		}
-		
-		private void sendInput(int leftVal, int rightVal){
-			short command = comm.createCommand(leftVal, rightVal, true);
-			try {
-				out.writeShort(command);
-			} catch (IOException e) {
-				Log.d("ROVER", "Failed to send command: "+e.toString());
-				e.printStackTrace();
-			}
+
+		@Override
+		public void onStartTrackingTouch(SeekBar seekBar) {
+		}
+
+		@Override
+		public void onStopTrackingTouch(SeekBar seekBar) {
 		}
 		
 	}

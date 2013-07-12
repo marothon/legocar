@@ -27,6 +27,7 @@ public class CommandInterface {
 	 * @param powLeft Power of the left side of the car
 	 * @param powRight Power of the right side of the car
 	 * 
+	 * 
 	 */
 	public short createCommand(int powLeft, int powRight, boolean interp) {
 		short command = 0;
@@ -44,5 +45,19 @@ public class CommandInterface {
 		command |= (powLeft & 0x2f) << 7;
 		seq = ++seq % 32;
 		return command;
+	}
+	/**
+	 * 
+	 * L:+11:R:-34
+	 * 
+	 */
+	public String createCommand(int lValue, int rValue){
+		String lSign = lValue > 0 ? "+" : "-";
+		String rSign = rValue > 0 ? "+" : "-";
+		
+		lValue = Math.abs(lValue)%100;
+		rValue = Math.abs(rValue)%100;
+		
+		return String.format("\nL:%s%02d:R:%s%02d\n", lSign, lValue, rSign, rValue);
 	}
 }
