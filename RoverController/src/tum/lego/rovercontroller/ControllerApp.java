@@ -77,15 +77,11 @@ public class ControllerApp extends Activity {
 		private ObjectInputStream in;
 		private ObjectOutputStream out;
 		private static final String FPGA_IP="192.168.43.112";
-		public CameraStream() {
-		}
 
 		public Void doInBackground(Void... params) {
 			EditText ipAddress = (EditText) act.findViewById(R.id.ipAddress);
 			String ipString = ipAddress.getText().toString().equals("") ? "192.168.43.1" : ipAddress.getText().toString();  
-			Bitmap image;
 			try {
-				Log.d("Rover", ipString);
 				InetAddress inetAddress = InetAddress.getByName(ipString);
 				cameraSocket = new Socket(inetAddress, 3333);
 				fpgaSocket = new Socket(FPGA_IP, 2000);
@@ -109,14 +105,9 @@ public class ControllerApp extends Activity {
 			}
 			/* Found host, hide connection window */
 			hideConnectionMenu(true);
-			try {
-				out.writeObject("I HAVE CONNECTED");
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+
 			new CommandStream(out).start();
-//			// String receivedText;
+			
 			byte img[] = null;
 			try {
 				while (true) {
@@ -129,9 +120,9 @@ public class ControllerApp extends Activity {
 					}
 				}
 			} catch (Exception e) {
+				/* Connection lost, restore connection button */
 				e.printStackTrace();
 				hideConnectionMenu(false);
-				/* Connection lost, restore connection button */
 				setReceivedText("Lost connection to LEGO-car");
 			}
 			
@@ -192,26 +183,23 @@ public class ControllerApp extends Activity {
 	
 	class CommandListener implements VerticalSeekBar.OnSeekBarChangeListener{
 		ObjectOutputStream out;
-		CommandInterface comm;
 		boolean isLeft;
 		String lastCommand;
 		
 		public CommandListener(ObjectOutputStream out, boolean left){
 			this.out = out;
 			isLeft = left;
-			comm = new CommandInterface();
 		}
 		
 		private void sendInput(int leftVal, int rightVal){
-			String command = comm.createCommand(leftVal, rightVal);
+			String command = CommandInterface.createCommand(leftVal, rightVal);
 			lastCommand = command;
 			Log.d("Rover","Sending: "+command);
 			try {
 				out.writeObject(command);
 				Log.d("Rover","Sent");
 			} catch (IOException e) {
-				Log.d("ROVER", "Failed to send command: "+e.toString());
-				e.printStackTrace();
+				Log.d("Rover", "Failed to send command: "+e.toString());
 			}
 		}
 
