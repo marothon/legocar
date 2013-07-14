@@ -1,36 +1,19 @@
 package tum.lego.fpgacontroller;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
 import android.graphics.Rect;
-import android.graphics.SurfaceTexture;
 import android.graphics.YuvImage;
-import android.graphics.Bitmap.CompressFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
-import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.ParcelFileDescriptor;
 import android.app.Activity;
-import android.util.Log;
-import android.view.Menu;
-import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.TextureView;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.io.*;
 import java.net.*;
-import java.util.List;
 
 public class LegoCarServer extends Activity {
 	private static Activity act;
@@ -46,7 +29,6 @@ public class LegoCarServer extends Activity {
 	class connectTask extends AsyncTask<String, String, CameraServer> {
 		@Override
 		protected CameraServer doInBackground(String... params) {
-			Log.d("FPGA", "THREAD START");
 			new CameraServer().start();
 			return null;
 		}
@@ -58,9 +40,6 @@ public class LegoCarServer extends Activity {
 		ObjectOutputStream out;
 
 		public void cam() {
-			Log.d("FPGA", "Get cam");
-			int[] fpsrange = new int[2];
-
 			Camera cam = Camera.open();
 			Camera.Parameters param = cam.getParameters();
 
@@ -92,27 +71,6 @@ public class LegoCarServer extends Activity {
 				e.printStackTrace();
 			}
 		}
-
-		void sendMessage(String msg) {
-			try {
-				out.writeObject(msg);
-				out.flush();
-				System.out.println("server>" + msg);
-			} catch (IOException ioException) {
-				ioException.printStackTrace();
-			}
-		}
-	}
-
-	/** A safe way to get an instance of the Camera object. */
-	public static Camera getCameraInstance() {
-		Camera c = null;
-		try {
-			c = Camera.open(); // attempt to get a Camera instance
-		} catch (Exception e) {
-			// Camera is not available (in use or does not exist)
-		}
-		return c; // returns null if camera is unavailable
 	}
 
 	public void console(final String msg){
@@ -146,10 +104,7 @@ public class LegoCarServer extends Activity {
 		public Snapshot(ObjectOutputStream out) {
 			this.out = out;
 		}
-
-		public Snapshot() {
-		}
-
+		
 		Parameters parameters;
 		Camera.Size size;
 		YuvImage yuvImage;
@@ -161,32 +116,26 @@ public class LegoCarServer extends Activity {
 			parameters = camera.getParameters();
 			int imageFormat = parameters.getPreviewFormat();
 			size = parameters.getPreviewSize();
-			Log.d("FPGA", "FRAME AVAILABLE");
-			// TextureView tv;
+//			Log.d("FPGA", "FRAME AVAILABLE");
+
 			ph = size.height;
 			pw = size.width;
-			Log.d("FPGA", "ph: " + ph + "pw: " + pw);
+//			Log.d("FPGA", "ph: " + ph + "pw: " + pw);
 			yuvImage = new YuvImage(data, imageFormat, pw, ph, null);
 			camera.addCallbackBuffer(data);
 			yuvImage.compressToJpeg(new Rect(0, 0, pw, ph), 100, outsie);
 			imageBytes = outsie.toByteArray();
-			// Bitmap image = BitmapFactory.decodeByteArray(imageBytes, 0,
-			// imageBytes.length);
 			try {
 				out.writeObject(imageBytes);
 				out.flush();
-				Log.d("FPGA", "IMAGE SENT MAN");
+//				Log.d("FPGA", "IMAGE SENT MAN");
 			} catch (Exception e) {
-				Log.d("FPGA", "FAILED TO SEND IMAGE, MAN. Restarting wait.");
+//				Log.d("FPGA", "FAILED TO SEND IMAGE, MAN. Restarting wait.");
 				e.printStackTrace();
-				try {
-					out.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+				console("Lost connection. Restarting wait.");
+				camera.release();
+				new connectTask().execute("");
 			}
-			// iv.setImageBitmap(image);
 
 		}
 	}
