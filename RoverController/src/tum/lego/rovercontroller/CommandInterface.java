@@ -2,10 +2,16 @@ package tum.lego.rovercontroller;
 
 import android.annotation.SuppressLint;
 
+/**
+ * Static class for generating command strings to the FPGA board.
+ */
 public class CommandInterface {
 	/**
 	 * 
-	 * L:+11:R:-34
+	 * Generates a commandstring from two given values. The command has been defined
+	 * as follows:
+	 * \nL:(sign)(power with 2 decimals):R:(sign)(power with 2 decimals)\n
+	 * L: signifying the left side of the car and R: the right.
 	 * 
 	 */
 	@SuppressLint("DefaultLocale")

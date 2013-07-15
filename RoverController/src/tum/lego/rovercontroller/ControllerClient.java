@@ -12,7 +12,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.util.Log;
-import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -23,7 +22,12 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
-public class ControllerApp extends Activity {
+/**
+ * 
+ * Android app to control lego car via a FPGA board.
+ *
+ */
+public class ControllerClient extends Activity {
 	public static final int K_PORT = 3333;
 
 	private Activity act = this;
@@ -31,9 +35,7 @@ public class ControllerApp extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		// Remove title bar
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-		// Remove notification bar
 		this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		setContentView(R.layout.activity_controllerapp);
@@ -43,12 +45,6 @@ public class ControllerApp extends Activity {
 	@Override
 	protected void onStart() {
 		super.onStart();
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
 	}
 
 	public void setReceivedText(final String text) {
@@ -67,12 +63,16 @@ public class ControllerApp extends Activity {
 		connectButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				new CameraStream().execute();
+				new CameraStreamer().execute();
 			}
 		});
 	}
-
-	class CameraStream extends AsyncTask<Void, Void, Void> {
+	/**
+	 * 
+	 *	Client class to connect to onboard android phone and FPGA wifi module.
+	 *
+	 */
+	class CameraStreamer extends AsyncTask<Void, Void, Void> {
 		private Socket cameraSocket, fpgaSocket;
 		private ObjectInputStream in;
 		private ObjectOutputStream out;
@@ -103,9 +103,8 @@ public class ControllerApp extends Activity {
 						"Sockets have failed to be created or are otherwise not connected.");
 				return null;
 			}
-			/* Found host, hide connection window */
+			
 			hideConnectionMenu(true);
-
 			new CommandStream(out).start();
 			
 			byte img[] = null;
@@ -114,14 +113,12 @@ public class ControllerApp extends Activity {
 					img = (byte[]) in.readObject();
 					if (img != null) {
 						showImage(img);
-						Log.d("FPGA", "Got an image");
 					} else {
 						break;
 					}
 				}
 			} catch (Exception e) {
-				/* Connection lost, restore connection button */
-				e.printStackTrace();
+				Log.d("Rover", "Lost connection: "+e.toString());
 				hideConnectionMenu(false);
 				setReceivedText("Lost connection to LEGO-car");
 			}
@@ -164,7 +161,11 @@ public class ControllerApp extends Activity {
 			});
 		}
 	}
-	/* Sends commands as soon as the values on the slides change */
+	/**
+	 * 
+	 * Initialize android UI listeners for sending commands to FPGA.
+	 * 
+	 */
 	class CommandStream extends Thread{
 		ObjectOutputStream out;
 		public CommandStream(ObjectOutputStream o){
@@ -181,6 +182,11 @@ public class ControllerApp extends Activity {
 		
 	}
 	
+	/**
+	 * 
+	 * Android UI listeners to send input to the FPGA Wifi module.
+	 * 
+	 */
 	class CommandListener implements VerticalSeekBar.OnSeekBarChangeListener{
 		ObjectOutputStream out;
 		boolean isLeft;
@@ -197,9 +203,8 @@ public class ControllerApp extends Activity {
 			Log.d("Rover","Sending: "+command);
 			try {
 				out.writeObject(command);
-				Log.d("Rover","Sent");
 			} catch (IOException e) {
-				Log.d("Rover", "Failed to send command: "+e.toString());
+				Log.d("Rover", "Could not send command: "+e.toString());
 			}
 		}
 
@@ -217,12 +222,10 @@ public class ControllerApp extends Activity {
 		}
 
 		@Override
-		public void onStartTrackingTouch(SeekBar seekBar) {
-		}
+		public void onStartTrackingTouch(SeekBar seekBar) {}
 
 		@Override
-		public void onStopTrackingTouch(SeekBar seekBar) {
-		}
+		public void onStopTrackingTouch(SeekBar seekBar) {}
 		
 	}
 }
