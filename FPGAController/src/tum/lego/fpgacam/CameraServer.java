@@ -1,4 +1,4 @@
-package tum.lego.fpgacontroller;
+package tum.lego.fpgacam;
 
 import android.graphics.Rect;
 import android.graphics.YuvImage;
@@ -7,6 +7,7 @@ import android.hardware.Camera.Parameters;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ScrollView;
@@ -15,7 +16,12 @@ import android.widget.TextView;
 import java.io.*;
 import java.net.*;
 
-public class LegoCarServer extends Activity {
+/**
+ * 
+ * 	App for the onboard phone to capture video feed and send to controller phone.
+ * 
+ */
+public class CameraServer extends Activity {
 	private static Activity act;
 
 	@Override
@@ -25,20 +31,34 @@ public class LegoCarServer extends Activity {
 		setContentView(R.layout.activity_lego_car_controller);
 		new connectTask().execute("");
 	}
-
-	class connectTask extends AsyncTask<String, String, CameraServer> {
+	
+	/**
+	 * 
+	 * Starts the camera stream.
+	 * 
+	 */
+	class connectTask extends AsyncTask<String, String, CameraStream> {
 		@Override
-		protected CameraServer doInBackground(String... params) {
-			new CameraServer().start();
+		protected CameraStream doInBackground(String... params) {
+			new CameraStream().start();
 			return null;
 		}
 	}
-
-	class CameraServer extends Thread {
+	
+	/**
+	 * 
+	 * Thread for TCP/IP socket to the controller phone. Sends the preview
+	 * frames of the camera to the controller. 
+	 *
+	 */
+	class CameraStream extends Thread {
 		ServerSocket providerSocket;
 		Socket connection = null;
 		ObjectOutputStream out;
 
+		/**
+		 * Initializes the camera.
+		 */
 		public void cam() {
 			Camera cam = Camera.open();
 			Camera.Parameters param = cam.getParameters();
@@ -54,17 +74,19 @@ public class LegoCarServer extends Activity {
 			cam.setPreviewCallbackWithBuffer(new Snapshot(out));
 			cam.startPreview();
 		}
-
+		
+		/**
+		 * 
+		 * Establish socket connection.
+		 * 
+		 */
 		public void run() {
 			try {
-				// 1. creating a server socket
 				providerSocket = new ServerSocket(3333);
-				// 2. Wait for connection
 				console("Waiting for connection");
 				connection = providerSocket.accept();
 				console("Connection received from "
 						+ connection.getInetAddress().getHostName());
-				// 3. get Input and Output streams
 				out = new ObjectOutputStream(connection.getOutputStream());
 				cam();
 			} catch (Exception e) {
@@ -72,7 +94,12 @@ public class LegoCarServer extends Activity {
 			}
 		}
 	}
-
+	/**
+	 * 
+	 * Prints a message to the screen.
+	 * 
+	 * @param msg The message.
+	 */
 	public void console(final String msg){
 		runOnUiThread(new Runnable(){
 			@Override
@@ -91,7 +118,7 @@ public class LegoCarServer extends Activity {
 		});
 	}
 
-	/*
+	/**
 	 * Class to capture "preview" frames of camera, i.e. camera frames before
 	 * capturing an image
 	 */
@@ -110,17 +137,21 @@ public class LegoCarServer extends Activity {
 		YuvImage yuvImage;
 		byte[] imageBytes;
 		ByteArrayOutputStream outsie = new ByteArrayOutputStream();
-
+		
+		/**
+		 * 
+		 * Writes the preview frame to the provided socket.
+		 * 
+		 */
 		public void onPreviewFrame(byte[] data, Camera camera) {
 			outsie.reset();
 			parameters = camera.getParameters();
 			int imageFormat = parameters.getPreviewFormat();
 			size = parameters.getPreviewSize();
-//			Log.d("FPGA", "FRAME AVAILABLE");
 
 			ph = size.height;
 			pw = size.width;
-//			Log.d("FPGA", "ph: " + ph + "pw: " + pw);
+
 			yuvImage = new YuvImage(data, imageFormat, pw, ph, null);
 			camera.addCallbackBuffer(data);
 			yuvImage.compressToJpeg(new Rect(0, 0, pw, ph), 100, outsie);
@@ -128,10 +159,8 @@ public class LegoCarServer extends Activity {
 			try {
 				out.writeObject(imageBytes);
 				out.flush();
-//				Log.d("FPGA", "IMAGE SENT MAN");
 			} catch (Exception e) {
-//				Log.d("FPGA", "FAILED TO SEND IMAGE, MAN. Restarting wait.");
-				e.printStackTrace();
+				Log.d("FPGA", "Could not send image: "+e.toString());
 				console("Lost connection. Restarting wait.");
 				camera.release();
 				new connectTask().execute("");
